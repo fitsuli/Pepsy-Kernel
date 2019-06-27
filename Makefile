@@ -384,12 +384,24 @@ LINUXINCLUDE    := \
 
 KBUILD_CPPFLAGS := -D__KERNEL__
 
-KBUILD_CFLAGS   := -Werror -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
-		   -fno-strict-aliasing -fno-common \
-		   -Werror-implicit-function-declaration \
-		   -Wno-format-security \
-		   -std=gnu89 \
-		   -mcpu=cortex-a57
+GCC6WARNINGS	= -Wno-bool-compare -Wno-misleading-indentation -Wno-format -Wno-logical-not-parentheses
+GCC7WARNINGS	= $(GCC6WARNINGS) -Wno-int-in-bool-context -Wno-memset-elt-size -Wno-parentheses -Wno-bool-operation -Wno-duplicate-decl-specifier -Wno-stringop-overflow -Wno-format-truncation -Wno-format-overflow -fno-modulo-sched
+GCC8WARNINGS	= $(GCC7WARNINGS) -Wno-multistatement-macros -Wno-error=sizeof-pointer-div -Wno-sizeof-pointer-div -Wno-attribute-alias -Wno-stringop-truncation
+GCC9WARNINGS	= $(GCC8WARNINGS) -Wno-address-of-packed-member -Wno-missing-attributes
+
+ifeq ($(cc-name),clang)
+OPT_FLAGS	:= -Ofast -march=armv8-a+crc -funsafe-math-optimizations -ffast-math
+OPT_FLAGS	+= -mtune=kryo -fvectorize -fslp-vectorize -ftree-vectorize -ftree-slp-vectorize
+else
+OPT_FLAGS	:= -mcpu=cortex-a57.cortex-a53 -mtune=cortex-a57.cortex-a53 $(GCC9WARNINGS)
+endif
+
+KBUILD_CFLAGS := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
+		-fno-strict-aliasing -fno-common -fshort-wchar \
+		-Werror-implicit-function-declaration \
+		-Wno-format-security \
+		-std=gnu89 \
+		$(call cc-option,-fno-PIE) $(OPT_FLAGS)
 
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
@@ -640,6 +652,28 @@ KBUILD_CFLAGS	+= $(call cc-disable-warning, int-in-bool-context)
 KBUILD_CFLAGS	+= $(call cc-disable-warning, attribute-alias)
 KBUILD_CFLAGS	+= $(call cc-option,-fno-PIE)
 KBUILD_AFLAGS	+= $(call cc-option,-fno-PIE)
+
+# Some of those needed to disable annoying warning on GCC 7.x, 8.x
+KBUILD_CFLAGS 	+= $(call cc-disable-warning, maybe-uninitialized,) \
+		   $(call cc-disable-warning, unused-variable,) \
+		   $(call cc-disable-warning, unused-function,) \
+		   $(call cc-disable-warning, tautological-compare,) \
+		   $(call cc-disable-warning, return-local-addr,) \
+		   $(call cc-disable-warning, array-bounds,) \
+		   $(call cc-disable-warning, misleading-indentation,) \
+		   $(call cc-disable-warning, switch-unreachable,) \
+		   $(call cc-disable-warning, memset-elt-size,) \
+		   $(call cc-disable-warning, bool-operation,) \
+		   $(call cc-disable-warning, parentheses,) \
+		   $(call cc-disable-warning, bool-compare,) \
+		   $(call cc-disable-warning, duplicate-decl-specifier,) \
+		   $(call cc-disable-warning, stringop-overflow,) \
+		   $(call cc-disable-warning, discarded-array-qualifiers,) \
+		   $(call cc-disable-warning, attribute-alias,) \
+		   $(call cc-disable-warning, packed-not-aligned,) \
+		   $(call cc-disable-warning, deprecated-declarations,) \
+		   $(call cc-disable-warning, sizeof-pointer-memaccess,) \
+		   $(call cc-disable-warning, return-stack-address,)
 
 ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
 KBUILD_CFLAGS	+= $(call cc-option,-Oz,-Os)
