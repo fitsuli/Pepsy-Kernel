@@ -100,3 +100,4 @@ all.config
 
 drivers/platform/msm/ipa/ipa_common
 arch/arm64/boot/dt.img
+AnyKernel2/capricorn/Image.gz-dtb
