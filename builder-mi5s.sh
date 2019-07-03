@@ -27,7 +27,7 @@ export CROSS_COMPILE=/home/user/kernel/linaro-64-dev/bin/aarch64-linux-gnu-
 
 # make clean && make mrproper
 # make capricorn_defconfig
-make -j5
+make -j4
 
 {
 cp $KERNEL_DIR/arch/arm64/boot/Image.gz-dtb $ANYKERNEL_DIR/capricorn
